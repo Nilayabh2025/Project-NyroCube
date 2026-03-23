@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>NyroCube | AI Smart Focus Dashboard</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=Manrope:wght@400;500;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="./styles.css" />
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="/socket.io/socket.io.js"></script>
+</head>
+<body>
+  <div class="app-shell">
+    <aside class="sidebar glass-panel">
+      <div>
+        <h1>Welcome to NyroCube</h1>
+        <p class="muted">NyroCube is an AI-powered smart focus system designed to help you understand and improve your productivity.</p>
+      </div>
+
+      <div class="status-stack">
+        <div class="status-chip">
+          <span class="chip-label">Device</span>
+          <strong id="deviceState">Awaiting telemetry</strong>
+        </div>
+        <div class="status-chip">
+          <span class="chip-label">Session</span>
+          <strong id="sessionState">No active focus sprint</strong>
+        </div>
+        <div class="status-chip">
+          <span class="chip-label">AI Coach</span>
+          <strong id="aiMode">Local analysis ready</strong>
+        </div>
+      </div>
+
+      <div class="cube-visual">
+        <div class="cube-face cube-front"></div>
+        <div class="cube-face cube-top"></div>
+        <div class="cube-face cube-side"></div>
+      </div>
+    </aside>
+
+    <main class="content-area">
+      <section class="hero glass-panel">
+        <div>
+          <p class="eyebrow">Smart Focus Dashboard</p>
+          <h2>Track deep work, detect distraction, and adapt in real time.</h2>
+          <p class="muted">Use the dashboard to start focus sessions, monitor NyroCube telemetry, and review AI-backed study recommendations.</p>
+        </div>
+
+        <div class="hero-actions">
+          <div class="welcome-card">
+            <span class="chip-label">Signed in as</span>
+            <strong id="userName">Guest User</strong>
+            <span id="userEmail" class="muted">Login required</span>
+          </div>
+          <button id="logoutButton" class="ghost-button hidden">Logout</button>
+        </div>
+      </section>
+
+      <section class="grid stats-grid">
+        <article class="metric-card warm-panel">
+          <span class="metric-label">Focus Timer</span>
+          <h3 id="focusTimer">00:00:00</h3>
+          <p id="goalText" class="muted">Set a goal and begin your sprint.</p>
+        </article>
+        <article class="metric-card glass-panel">
+          <span class="metric-label">Total Focus</span>
+          <h3 id="totalFocusMinutes">0 min</h3>
+          <p class="muted">Accumulated completed focus time.</p>
+        </article>
+        <article class="metric-card glass-panel">
+          <span class="metric-label">Distraction Alerts</span>
+          <h3 id="totalDistractions">0</h3>
+          <p class="muted">Recent interruptions captured by NyroCube.</p>
+        </article>
+        <article class="metric-card glass-panel accent-panel">
+          <span class="metric-label">Focus Score</span>
+          <h3 id="averageFocusScore">0.0</h3>
+          <p class="muted">Average quality of completed sessions.</p>
+        </article>
+      </section>
+
+      <section class="grid action-grid">
+        <article class="glass-panel control-card">
+          <div class="section-head">
+            <div>
+              <p class="eyebrow">Session Control</p>
+              <h3>Start or stop a focus sprint</h3>
+            </div>
+            <span class="pill">Authenticated users only</span>
+          </div>
+
+          <div class="control-row">
+            <label for="goalMinutes">Goal (minutes)</label>
+            <input id="goalMinutes" type="number" min="10" max="180" value="25" />
+          </div>
+
+          <div class="button-row">
+            <button id="startButton" class="primary-button">Start Focus</button>
+            <button id="stopButton" class="secondary-button">Stop Focus</button>
+          </div>
+
+          <p id="actionFeedback" class="muted small-text">NyroCube will stream updates here once you're signed in.</p>
+        </article>
+
+        <article class="glass-panel auth-card">
+          <div class="section-head">
+            <div>
+              <p class="eyebrow">Authentication</p>
+              <h3>Login or create a new account</h3>
+            </div>
+          </div>
+
+          <div class="tabs">
+            <button class="tab-button active" data-auth-tab="login">Login</button>
+            <button class="tab-button" data-auth-tab="signup">Signup</button>
+          </div>
+
+          <form id="loginForm" class="auth-form">
+            <input name="email" type="email" placeholder="Email address" required />
+            <input name="password" type="password" placeholder="Password" required />
+            <button type="submit" class="primary-button full-width">Login</button>
+          </form>
+
+          <form id="signupForm" class="auth-form hidden">
+            <input name="fullName" type="text" placeholder="Full name" required />
+            <input name="email" type="email" placeholder="Email address" required />
+            <input name="password" type="password" placeholder="Password" required minlength="6" />
+            <button type="submit" class="primary-button full-width">Create Account</button>
+          </form>
+
+          <p id="authFeedback" class="muted small-text">Create an account to unlock personalized dashboards and reports.</p>
+        </article>
+      </section>
+
+      <section class="grid insights-grid">
+        <article class="glass-panel chart-card wide-card">
+          <div class="section-head">
+            <div>
+              <p class="eyebrow">Trendline</p>
+              <h3>Weekly focus report</h3>
+            </div>
+          </div>
+          <canvas id="focusTrendChart"></canvas>
+        </article>
+
+        <article class="glass-panel chart-card">
+          <div class="section-head">
+            <div>
+              <p class="eyebrow">Interruptions</p>
+              <h3>Distraction profile</h3>
+            </div>
+          </div>
+          <canvas id="distractionChart"></canvas>
+        </article>
+      </section>
+
+      <section class="grid telemetry-grid">
+        <article class="glass-panel">
+          <div class="section-head">
+            <div>
+              <p class="eyebrow">Live Telemetry</p>
+              <h3>ESP32 device signals</h3>
+            </div>
+          </div>
+          <div id="telemetryList" class="telemetry-list"></div>
+        </article>
+
+        <article class="glass-panel">
+          <div class="section-head">
+            <div>
+              <p class="eyebrow">Distraction Feed</p>
+              <h3>Latest alerts</h3>
+            </div>
+          </div>
+          <div id="alertsList" class="alert-list"></div>
+        </article>
+
+        <article class="glass-panel ai-card">
+          <div class="section-head">
+            <div>
+              <p class="eyebrow">AI Recommendations</p>
+              <h3>Personalized coaching</h3>
+            </div>
+          </div>
+          <p id="aiSummary" class="muted">Sign in to generate recommendations from your focus pattern history.</p>
+          <div id="aiRecommendations" class="recommendation-list"></div>
+        </article>
+      </section>
+    </main>
+  </div>
+
+  <script src="./app.js"></script>
+</body>
+</html>
